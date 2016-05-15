@@ -1,17 +1,29 @@
 import sys
 import csv
 import pprint
+import time
 import datetime
 
-def get_infile_name():
-    if len(sys.argv) < 2:
-        print('Usage: python3 print_stats.py groupme_MYGROUPNAME.csv')
+def date_to_ts(datestr):
+    return int(datetime.datetime.strptime(datestr, "%m-%d-%Y").timestamp())
+
+def parse_args(args):
+    start_ts = 0
+    end_ts = float('inf')
+
+    if len(args) < 1:
+        print('Usage: python3 print_stats.py groupme_MYGROUPNAME.csv 1-1-2014 1-2-2015')
         sys.exit(1)
+    elif len(args) == 2:
+        start_ts = date_to_ts(args[1])
+    elif len(args) == 3:
+        start_ts = date_to_ts(args[1])
+        end_ts = date_to_ts(args[2])
 
     infile_name = sys.argv[1]
-    return infile_name
+    return infile_name, start_ts, end_ts
 
-def print_stats(memberdict, uid_to_name, first_message_date):
+def print_stats(memberdict, uid_to_name, first_message, last_message):
 
     def print_leaders(memberdict, uid_to_name, key, display_key):
         print(display_key + ' leaders:')
@@ -20,7 +32,8 @@ def print_stats(memberdict, uid_to_name, first_message_date):
             print('   ' + uid_to_name[uid] + ' (' + str(memberdict[uid][key]) + ')')
         print('')
 
-    print('First message on ' + first_message_date)
+    print('First message: ' + first_message)
+    print('Last message: ' + last_message)
     print('')
 
     for uid, member in memberdict.items():
@@ -53,7 +66,7 @@ def print_stats(memberdict, uid_to_name, first_message_date):
     print_leaders(memberdict, uid_to_name, 'given_to_received', 'Given to Received Ratio')
     print_leaders(memberdict, uid_to_name, 'likes_per_message', 'Likes Per Message')
 
-def read_csv(infile_name):
+def read_csv(infile_name, start_ts, end_ts):
     def build_memberdict(uids):
         memberdict = {}
 
@@ -73,20 +86,35 @@ def read_csv(infile_name):
 
         return memberdict
 
-    def parse_row(memberdict, row):
-        timestamp = row[0]
+    def fmt_msg(row, uid_to_name):
+        date = datetime.datetime.fromtimestamp(float(row[0])).strftime('%m-%d-%Y')
+        uid = row[1]
+        if uid in uid_to_name:
+            name = uid_to_name[uid]
+        else:
+            name = uid
+        msg = row[3]
+        return name + '(' + date + '): ' + msg
+
+    def parse_row(memberdict, row, start_ts, end_ts):
+        timestamp = int(row[0])
+        if timestamp < start_ts:
+            return False, None # ignore row and stop
+        elif timestamp > end_ts:
+            return True, None # ignore row but continue
+
         uid = row[1]
         if row[2] != '':
             liked_by = row[2].split(',')
         else:
             liked_by = []
-        text = row[3]
+        text = ' '.join(row[3].splitlines())
 
         # Reject rows with member id 'system' and 'calendar'
         try:
             int(uid)
         except ValueError:
-            return
+            return True, None
 
         member = memberdict[uid]
         member['messages'] += 1
@@ -101,6 +129,8 @@ def read_csv(infile_name):
             member['liked_by'][l_uid] += 1
             memberdict[l_uid]['liked'][uid] += 1
 
+        return True, row
+
     with open(infile_name, newline='') as csvfile:
         reader = csv.reader(csvfile, dialect='excel')
         uids = next(reader)
@@ -110,12 +140,18 @@ def read_csv(infile_name):
         uid_to_name = dict(zip(uids, member_names))
 
 
+        toprow = None
         bottomrow = None
         for row in reader:
-            parse_row(memberdict, row)
+            parse_row_result, parsed_row = parse_row(memberdict, row, start_ts, end_ts)
+            if toprow == None and parsed_row:
+                toprow = row
+            if not parse_row_result:
+                break
             bottomrow = row
 
-        first_message_date = datetime.datetime.fromtimestamp(float(bottomrow[0])).strftime('%m-%d-%Y')
+        first_message = fmt_msg(bottomrow, uid_to_name)
+        last_message = fmt_msg(toprow, uid_to_name)
 
         for uid, member in memberdict.items():
             member['sweeps_per_message'] = member['sweeps'] / member['messages']
@@ -124,9 +160,11 @@ def read_csv(infile_name):
             member['likes_per_message'] = member['total_likes_received'] / member['messages']
             member['given_to_received'] = member['total_likes_given'] / member['total_likes_received']
 
-        print_stats(memberdict, uid_to_name, first_message_date)
+        print_stats(memberdict, uid_to_name, first_message, last_message)
 
 def main():
-    read_csv(get_infile_name())
+    args = sys.argv[1:len(sys.argv)]
+
+    read_csv(*parse_args(args))
 
 main()
