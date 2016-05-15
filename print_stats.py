@@ -105,7 +105,7 @@ def read_csv(infile_name, start_ts, end_ts):
 
         uid = row[1]
         if row[2] != '':
-            liked_by = row[2].split(',')
+            liked_by = row[2].split('|')
         else:
             liked_by = []
         text = ' '.join(row[3].splitlines())

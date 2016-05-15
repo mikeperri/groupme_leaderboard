@@ -33,7 +33,7 @@ def setup():
 def write_messages(outfile_name, members, messages):
     def write_message_row(writer, message):
         created_at = int(message.created_at.timestamp())
-        favorited_by = str(','.join(message.favorited_by))
+        favorited_by = str('|'.join(message.favorited_by))
         if message.text != None:
             text = str(unicodedata.normalize('NFKD', message.text).encode('ascii', 'ignore'), 'ascii')
             #text = message.text
