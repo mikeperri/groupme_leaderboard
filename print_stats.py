@@ -119,8 +119,8 @@ def read_csv(infile_name):
 
         for uid, member in memberdict.items():
             member['sweeps_per_message'] = member['sweeps'] / member['messages']
-            member['total_likes_given'] = sum(member['liked'].values())
-            member['total_likes_received'] = sum(member['liked_by'].values())
+            member['total_likes_given'] = sum(member['liked'].values()) - member['liked'][uid]
+            member['total_likes_received'] = sum(member['liked_by'].values()) - member['liked_by'][uid]
             member['likes_per_message'] = member['total_likes_received'] / member['messages']
             member['given_to_received'] = member['total_likes_given'] / member['total_likes_received']
 
