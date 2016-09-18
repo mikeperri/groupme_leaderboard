@@ -5,7 +5,7 @@ import markovify
 import nltk
 import re
 
-# cli:
+# Command line interface:
 # python3 csv_to_markov.py groupme_clowns.csv "name"
 #
 # optionally, specify number of sentences to generate

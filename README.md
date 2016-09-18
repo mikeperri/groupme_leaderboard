@@ -10,4 +10,5 @@ Groupy install instructions here: (http://groupy.readthedocs.io/en/latest/pages/
 
 # Usage
 1. Run `python3 download_messages.py "MY GROUP NAME"` - this will generate a CSV file
-2. Run `python3 print_stats.py MYGROUPNAME.csv`
+2. Run `python3 print_stats.py groupme_MYGROUPNAME.csv`
+3. For Markov run `python3 csv_to_markov.py groupme_MYGROUPNAME.csv "person's name"` ([more info](csv_to_markov.py))
