@@ -1,5 +1,5 @@
 # Setup
-1. Install python3
+1. Install [python3](https://www.python.org/downloads/)
 2. `pip3 install GroupyAPI nltk markovify`
 3. Get a GroupMe API token from [here](https://dev.groupme.com/)
 4. Save your API token in a file ~/.groupy.key
