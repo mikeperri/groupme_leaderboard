@@ -35,6 +35,10 @@ class POSifiedText(markovify.NewlineText):
         sentence = " ".join(clean_words)
         return sentence
 
+    def make_sentence(self, *args, **kwargs):
+        kwargs['max_overlap_ratio'] = .5
+        return super().make_sentence(*args, **kwargs)
+
 def getAuthorId(authorIds, authorNames, arg):
     for (index, name) in enumerate(authorNames):
         if name.startswith(arg):
@@ -74,7 +78,7 @@ def standard(times):
 
     count = 0
     while(count < times):
-        sentence = model.make_sentence(max_overlap_ratio=.4)
+        sentence = model.make_sentence()
         if (sentence is not None):
             count = count + 1
             print(sentence)
